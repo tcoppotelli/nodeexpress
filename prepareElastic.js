@@ -285,7 +285,7 @@ function es() {
                         "must": [
                             {
                                 "query_string": {
-                                    "query": "beds:3 AND pa:DA",
+                                    "query": "beds:3 AND " + query,
                                     "analyze_wildcard": true,
                                     "time_zone": "Europe/London"
                                 }

@@ -37,7 +37,7 @@ function routes(){
 
     bookRouter.route('/bucket/')
         .get((req, res) => {
-            lib.searchBucket("", function (err, response, status) {
+            lib.searchBucket(req.query.q, function (err, response, status) {
                 console.log(response);
                 if (err) {
                     res.send(err);
