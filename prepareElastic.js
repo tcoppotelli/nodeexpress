@@ -1,187 +1,187 @@
 var elasticsearch = require('elasticsearch');
 
 var client = new elasticsearch.Client({
-    host: 'localhost:9200',
-    log: 'trace'
+    host: 'localhost:9200'
 });
-var index = 'myindex';
+var index = 'sct_usage';
 
-function init(res) {
+function es() {
+    function init(res) {
 
-    Promise.resolve()
-        .then(deleteIndex, handleError)
-        .then(createIndex, handleError)
-        // .then(checkStatus, handleError)
-        // .then(closeIndex, handleError)
-        // .then(putSettings, handleError)
-        .then(putMapping, handleError)
-        .then(indexSample, handleError)
-        // .then(openIndex, handleError)
-        .then(res.json("ES populated!"));
+        Promise.resolve()
+            .then(deleteIndex, handleError)
+            .then(createIndex, handleError)
+            // .then(checkStatus, handleError)
+            // .then(closeIndex, handleError)
+            // .then(putSettings, handleError)
+            .then(putMapping, handleError)
+            .then(indexSample, handleError)
+            // .then(openIndex, handleError)
+            .then(res.json("ES populated!"));
 
-};
+    };
 
 
-function ping(res){
-    console.log('ping() ...');
+    function ping(res) {
+        console.log('ping() ...');
 
-    return client.ping({
-        requestTimeout: 30000,
-    }, function (error) {
-        if (error) {
-            res.json('elasticsearch cluster is down!');
-        } else {
-            res.json('All is well');
-        }
-    });
-}
+        return client.ping({
+            requestTimeout: 30000,
+        }, function (error) {
+            if (error) {
+                res.json('elasticsearch cluster is down!');
+            } else {
+                res.json('All is well');
+            }
+        });
+    }
 
-function deleteIndex() {
+    function deleteIndex() {
 
-    console.log('Deleting old index ...');
+        console.log('Deleting old index ...');
 
-    return client.indices.delete({
-        index: index,
-        ignore: [404]
-    }).then(handleResolve);
-}
+        return client.indices.delete({
+            index: index,
+            ignore: [404]
+        }).then(handleResolve);
+    }
 
-function createIndex() {
+    function createIndex() {
 
-    console.log('Creating new index ...');
+        console.log('Creating new index ...');
 
-    return client.indices.create({
-        index: index,
-        body: {
-            settings: {
-                index: {
-                    number_of_replicas: 1 // for local development
+        return client.indices.create({
+            index: index,
+            body: {
+                settings: {
+                    index: {
+                        number_of_replicas: 1 // for local development
+                    }
                 }
             }
-        }
-    }).then(handleResolve);
-}
+        }).then(handleResolve);
+    }
 
-// This isn't strictly necessary, but it solves a problem with closing
-// the index before it has been created
-function checkStatus() {
+    // This isn't strictly necessary, but it solves a problem with closing
+    // the index before it has been created
+    function checkStatus() {
 
-    console.log('Checking status ...');
+        console.log('Checking status ...');
 
-    return client.cluster.health({
-        index: index
-    }).then(handleResolve);
-}
+        return client.cluster.health({
+            index: index
+        }).then(handleResolve);
+    }
 
-function closeIndex() {
+    function closeIndex() {
 
-    console.log('Closing index ...');
+        console.log('Closing index ...');
 
-    return client.indices.close({
-        index: index
-    }).then(handleResolve);
-}
+        return client.indices.close({
+            index: index
+        }).then(handleResolve);
+    }
 
-function putSettings() {
+    function putSettings() {
 
-    console.log('Put settings ...');
+        console.log('Put settings ...');
 
-    return client.indices.putSettings({
-        index: index,
-        type: type,
-        body: {
-            settings: {
-                analysis: {
-                    analyzer: {
-                        folding: {
-                            tokenizer: 'standard',
-                            filter: ['lowercase', 'asciifolding']
+        return client.indices.putSettings({
+            index: index,
+            type: type,
+            body: {
+                settings: {
+                    analysis: {
+                        analyzer: {
+                            folding: {
+                                tokenizer: 'standard',
+                                filter: ['lowercase', 'asciifolding']
+                            }
                         }
                     }
                 }
             }
-        }
-    }).then(handleResolve);
-}
+        }).then(handleResolve);
+    }
 
-function putMapping() {
+    function putMapping() {
 
-    console.log('Put mapping ...');
+        console.log('Put mapping ...');
 
-     return client.indices.putMapping({
-        index: index,
-        body: {
-            properties: {
-                "valuation_uid": {
-                    "type": "integer"
-                },
-                "location": {
-                    "type": "geo_point"
-                },
-                "prop_type": {
-                    "type": "keyword"
-                },
-                "prop_style": {
-                    "type": "keyword"
-                },
-                "beds": {
-                    "type": "integer"
-                },
-                "create_date": {
-                    "type": "date"
-                },
-                "sur_sales_val": {
-                    "type": "integer"
-                },
-                "sur_rental_val": {
-                    "type": "integer"
-                },
-                "postcode": {
-                    "type": "keyword"
-                },
-                "PA": {
-                    "type": "keyword"
-                },
-                "local_authority": {
-                    "type": "keyword"
-                },
-                "gov_region": {
-                    "type": "keyword"
-                },
-                "applic_type": {
-                    "type": "keyword"
-                },
-                "lender": {
-                    "type": "keyword"
-                },
-                "market_sector": {
-                    "type": "keyword"
-                },
-                "customer_uid": {
-                    "type": "integer"
+        return client.indices.putMapping({
+            index: index,
+            body: {
+                properties: {
+                    "valuation_uid": {
+                        "type": "integer"
+                    },
+                    "location": {
+                        "type": "geo_point"
+                    },
+                    "prop_type": {
+                        "type": "keyword"
+                    },
+                    "prop_style": {
+                        "type": "keyword"
+                    },
+                    "beds": {
+                        "type": "integer"
+                    },
+                    "create_date": {
+                        "type": "date"
+                    },
+                    "sur_sales_val": {
+                        "type": "integer"
+                    },
+                    "sur_rental_val": {
+                        "type": "integer"
+                    },
+                    "postcode": {
+                        "type": "keyword"
+                    },
+                    "PA": {
+                        "type": "keyword"
+                    },
+                    "local_authority": {
+                        "type": "keyword"
+                    },
+                    "gov_region": {
+                        "type": "keyword"
+                    },
+                    "applic_type": {
+                        "type": "keyword"
+                    },
+                    "lender": {
+                        "type": "keyword"
+                    },
+                    "market_sector": {
+                        "type": "keyword"
+                    },
+                    "customer_uid": {
+                        "type": "integer"
+                    }
                 }
             }
-        }
-    }).then(handleResolve);
-}
+        }).then(handleResolve);
+    }
 
-async function get(id, callback) {
-    await client.get({
-        index: index,
-        id: id
-    },callback);
+    async function get(id, callback) {
+        await client.get({
+            index: index,
+            id: id
+        }, callback);
 
-}
+    }
 
 
-function indexSample() {
+    function indexSample() {
 
-    console.log('Index sample...');
+        console.log('Index sample...');
 
-     return client.index({
-        index: index,
-        id:'1',
-        body: {
+        return client.index({
+            index: index,
+            id: '1',
+            body: {
 
                 "valuation_uid": "1",
                 "location": {
@@ -192,7 +192,7 @@ function indexSample() {
                 "prop_style": "SD",
                 "beds": 2,
                 "create_date": Date.now(),
-                "sur_sales_val":100000,
+                "sur_sales_val": 100000,
                 "sur_rental_val": 2000,
                 "postcode": "sw15 1lq",
                 "PA": "SW",
@@ -203,57 +203,59 @@ function indexSample() {
                 "market_sector": "high",
                 "customer_uid": 123
 
-        }
-    }).then(handleResolve);
-}
-
-async function indexDocument(content, callback) {
-
-    console.log('Index new content...');
-
-     await client.index({
-        index: index,
-        body: content
-    }, callback);
-}
-
-async function search(query, callback) {
-    await client.search({
-        index: index,
-        q:query
-    },callback);
-
-}
-
-
-function openIndex() {
-
-    console.log('Open index ...');
-
-    return client.indices.open({
-        index: index
-    }).then(handleResolve);
-}
-
-function handleResolve(body) {
-
-    if (!body.error) {
-
-        console.log('\x1b[32m' + 'Success' + '\x1b[37m');
-    } else {
-
-        console.log('\x1b[33m' + 'Failed' + '\x1b[37m');
+            }
+        }).then(handleResolve);
     }
 
-    return Promise.resolve();
+    async function indexDocument(content, callback) {
+
+        console.log('Index new content...');
+
+        await client.index({
+            index: index,
+            body: content
+        }, callback);
+    }
+
+    async function search(query, callback) {
+        await client.search({
+            index: index,
+            q: query
+        }, callback);
+
+    }
+
+
+    function openIndex() {
+
+        console.log('Open index ...');
+
+        return client.indices.open({
+            index: index
+        }).then(handleResolve);
+    }
+
+    function handleResolve(body) {
+
+        if (!body.error) {
+
+            console.log('\x1b[32m' + 'Success' + '\x1b[37m');
+        } else {
+
+            console.log('\x1b[33m' + 'Failed' + '\x1b[37m');
+        }
+
+        return Promise.resolve();
+    }
+
+    function handleError(err) {
+
+        console.error(JSON.stringify(err.body, null, 2));
+
+        return Promise.reject();
+    }
+
+    return {indexDocument, search, get, init, ping};
 }
 
-function handleError(err) {
-
-    console.error(JSON.stringify(err.body, null, 2));
-
-    return Promise.reject();
-}
-
-
-module.exports = {indexDocument, search, get, init, ping};
+module.exports = es;
