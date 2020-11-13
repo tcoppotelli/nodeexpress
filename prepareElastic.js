@@ -3,7 +3,7 @@ var elasticsearch = require('elasticsearch');
 var client = new elasticsearch.Client({
     host: 'localhost:9200'
 });
-var index = 'sct_usage';
+var index = 'data_product_live';
 
 function es() {
     function init(res) {
@@ -130,7 +130,7 @@ function es() {
                     "create_date": {
                         "type": "date"
                     },
-                    "sur_sales_val": {
+                    "transaction_price": {
                         "type": "integer"
                     },
                     "sur_rental_val": {
@@ -192,7 +192,7 @@ function es() {
                 "prop_style": "SD",
                 "beds": 2,
                 "create_date": Date.now(),
-                "sur_sales_val": 100000,
+                "transaction_price": 100000,
                 "sur_rental_val": 2000,
                 "postcode": "sw15 1lq",
                 "PA": "SW",
@@ -233,24 +233,24 @@ function es() {
                 "aggs": {
                     "average_prices": {
                         "date_histogram": {
-                            "field": "create_date",
-                            "calendar_interval": "1w",
+                            "field": "transaction_date",
+                            "calendar_interval": "1m",
                             "time_zone": "Europe/London",
                             "min_doc_count": 1
                         },
                         "aggs": {
                             "average_price": {
                                 "terms": {
-                                    "field": "pa.keyword",
+                                    "field": "postcode_district",
                                     "order": {
-                                        "average_price_sur_sales_val": "desc"
+                                        "average_transaction_price": "desc"
                                     },
                                     "size": 5
                                 },
                                 "aggs": {
-                                    "average_price_sur_sales_val": {
+                                    "average_transaction_price": {
                                         "avg": {
-                                            "field": "sur_sales_val"
+                                            "field": "transaction_price"
                                         }
                                     }
                                 }
@@ -265,7 +265,7 @@ function es() {
                 "script_fields": {},
                 "docvalue_fields": [
                     {
-                        "field": "@timestamp",
+                        "field": "transaction_date",
                         "format": "date_time"
                     },
                     {
@@ -285,7 +285,7 @@ function es() {
                         "must": [
                             {
                                 "query_string": {
-                                    "query": "beds:3 AND " + query,
+                                    "query": query,
                                     "analyze_wildcard": true,
                                     "time_zone": "Europe/London"
                                 }
@@ -294,23 +294,23 @@ function es() {
                         "filter": [
                             {
                                 "exists": {
-                                    "field": "sur_sales_val"
+                                    "field": "transaction_price"
                                 }
                             },
                             {
                                 "exists": {
-                                    "field": "sur_sales_val"
+                                    "field": "transaction_price"
                                 }
                             },
-                            {
-                                "range": {
-                                    "create_date": {
-                                        "gte": "2019-10-20T13:26:45.427Z",
-                                        "lte": "2020-10-20T13:26:45.427Z",
-                                        "format": "strict_date_optional_time"
-                                    }
-                                }
-                            }
+                            // {
+                            //     "range": {
+                            //         "transaction_date": {
+                            //             "gte": "2019-10-20T13:26:45.427Z",
+                            //             "lte": "2020-12-20T13:26:45.427Z",
+                            //             "format": "strict_date_optional_time"
+                            //         }
+                            //     }
+                            // }
                         ],
                         "should": [],
                         "must_not": []
@@ -351,7 +351,7 @@ function es() {
         return Promise.reject();
     }
 
-    return {indexDocument, search,searchBucket, get, init, ping};
+    return { indexDocument, search, searchBucket, get, init, ping };
 }
 
 module.exports = es;

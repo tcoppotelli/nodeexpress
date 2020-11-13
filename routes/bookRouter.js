@@ -10,20 +10,20 @@ function routes(){
             lib.ping(res);
         });
     //http://localhost:4000/api/es/init
-    // bookRouter.route('/es/init')
-    //     .get((req,res) =>{
-    //         lib.init(res);
-    //     });
+    bookRouter.route('/es/init')
+        .get((req,res) =>{
+            lib.init(res);
+        });
 
     const controller = booksController(lib);
-    //http://localhost:4000/api/sct_usage?q=prop_type:H
-    bookRouter.route('/sct_usage')
+    //http://localhost:4000/api/sct_usage?q=prop_type:House
+    bookRouter.route('/data_product_live')
 
         .post(controller.post)
         .get(controller.get);
 
 
-    bookRouter.route('/sct_usage/:id')
+    bookRouter.route('/data_product_live/:id')
         .get((req, res) => {
             lib.get(req.params.id, function (err, response, status) {
                 if (err) {
