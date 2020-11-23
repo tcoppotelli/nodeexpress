@@ -1,6 +1,7 @@
 const formatter = require("./priceFormatter");
-
-const reportName = 'average_prices_by_date';
+const _ = require('lodash');
+const aggregationType = 'average_by_date';
+const subAggregationType = 'bedrooms';
 
 module.exports = async (client, index, query) => {
     const calendar_interval = "1w"
@@ -8,7 +9,7 @@ module.exports = async (client, index, query) => {
         index: index,
         body: {
             "aggs": {
-                "average_prices_by_date": {
+                [aggregationType]: {
                     "date_histogram": {
                         "field": "transaction_date",
                         calendar_interval,
@@ -24,12 +25,12 @@ module.exports = async (client, index, query) => {
                         }
                     }
                 },
-                "bedrooms": {
+                [subAggregationType]: {
                     "terms": {
                         "field": "bedrooms"
                     },
                     aggs: {
-                        "average_prices_by_date": {
+                        "average_transaction_price": {
                             "date_histogram": {
                                 "field": "transaction_date",
                                 calendar_interval,
@@ -120,7 +121,11 @@ module.exports = async (client, index, query) => {
         }
     });
 
-    const buckets = result.aggregations[reportName].buckets.map(r => {
+    const {
+        aggregations
+    } = result;
+
+    const tableData = aggregations[aggregationType].buckets.map(r => {
         return {
             key: r.key,
             keyString: r.key_as_string,
@@ -131,25 +136,45 @@ module.exports = async (client, index, query) => {
                 formatted: formatter.format((r.average_transaction_price.value)),
             },
         }
-    })
-    return {
-        reportName: 'Average Price by Date',
-        columns: [
-            {
-                field: 'keyString',
-                name: 'Date'
-            },
-            {
-                field: 'value',
-                name: 'Average Price'
-            },
-            {
-                field: 'count',
-                name: 'Properties sold'
-            }
-        ],
-        buckets,
-        result
-    }
+    });
 
+    const subAggregation = _.flatMap(aggregations[subAggregationType].buckets, (agg) => {
+        return {
+            key: agg.key + ' bedrooms',
+            values: agg.average_transaction_price.buckets
+        };
+    });
+
+    const chartData = aggregations[aggregationType].buckets.map((bucket) => {
+        const result = {
+            date: bucket.key_as_string
+        };
+        subAggregation.forEach((subAgg) => {
+            const value = _.find(subAgg.values, (val) => val.key === bucket.key) || {};
+            result[subAgg.key] = (value.average_transaction_price || {}).value || 0;
+        });
+        return result;
+    });
+
+    return {
+        reportName: 'Average Price by Bedroom',
+        tableData: {
+            rows: tableData,
+            columns: [
+                {
+                    field: 'keyString',
+                    name: 'Date'
+                },
+                {
+                    field: 'value',
+                    name: 'Average Price'
+                },
+                {
+                    field: 'count',
+                    name: 'Properties sold'
+                }
+            ]
+        },
+        chartData
+    }
 }
