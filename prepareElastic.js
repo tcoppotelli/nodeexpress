@@ -5,6 +5,9 @@ var client = new elasticsearch.Client({
 });
 var index = 'data_product_live';
 
+const getAveragePricesByDateReport = require('./reports/getAveragePriceByDate');
+const getDashboarReport = require('./reports/getDashboardData');
+
 function es() {
     function init(res) {
 
@@ -217,6 +220,25 @@ function es() {
         }, callback);
     }
 
+    var formatter = new Intl.NumberFormat('en-UK', {
+        style: 'currency',
+        currency: 'GBP',
+
+        // These options are needed to round to whole numbers if that's what you want.
+        //minimumFractionDigits: 0,
+        //maximumFractionDigits: 0,
+    });
+
+    async function getReport(reportName, query) {
+        console.log('"' + reportName + '"')
+        switch (reportName) {
+            case 'average_prices_by_date':
+                const result = await getAveragePricesByDateReport(client, index, query);
+                return result;
+            default: throw new Error('No report found')
+        }
+    }
+
     async function search(query, callback) {
         await client.search({
             index: index,
@@ -226,101 +248,10 @@ function es() {
 
     }
 
-    async function searchBucket(query, callback) {
-        await client.search({
-            index: index,
-            body: {
-                "aggs": {
-                    "average_prices": {
-                        "date_histogram": {
-                            "field": "transaction_date",
-                            "calendar_interval": "1m",
-                            "time_zone": "Europe/London",
-                            "min_doc_count": 1
-                        },
-                        "aggs": {
-                            "average_price": {
-                                "terms": {
-                                    "field": "postcode_district",
-                                    "order": {
-                                        "average_transaction_price": "desc"
-                                    },
-                                    "size": 5
-                                },
-                                "aggs": {
-                                    "average_transaction_price": {
-                                        "avg": {
-                                            "field": "transaction_price"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "size": 0,
-                "stored_fields": [
-                    "*"
-                ],
-                "script_fields": {},
-                "docvalue_fields": [
-                    {
-                        "field": "transaction_date",
-                        "format": "date_time"
-                    },
-                    {
-                        "field": "create_date",
-                        "format": "date_time"
-                    },
-                    {
-                        "field": "raw_date",
-                        "format": "date_time"
-                    }
-                ],
-                "_source": {
-                    "excludes": []
-                },
-                "query": {
-                    "bool": {
-                        "must": [
-                            {
-                                "query_string": {
-                                    "query": query,
-                                    "analyze_wildcard": true,
-                                    "time_zone": "Europe/London"
-                                }
-                            }
-                        ],
-                        "filter": [
-                            {
-                                "exists": {
-                                    "field": "transaction_price"
-                                }
-                            },
-                            {
-                                "exists": {
-                                    "field": "transaction_price"
-                                }
-                            },
-                            // {
-                            //     "range": {
-                            //         "transaction_date": {
-                            //             "gte": "2019-10-20T13:26:45.427Z",
-                            //             "lte": "2020-12-20T13:26:45.427Z",
-                            //             "format": "strict_date_optional_time"
-                            //         }
-                            //     }
-                            // }
-                        ],
-                        "should": [],
-                        "must_not": []
-                    }
-                }
-            }
-        }, callback);
-
+    async function getDashboardData(query) {
+        const result = await getDashboarReport(client, index, query)
+        return result;
     }
-
 
     function openIndex() {
 
@@ -351,7 +282,7 @@ function es() {
         return Promise.reject();
     }
 
-    return { indexDocument, search, searchBucket, get, init, ping };
+    return { indexDocument, search, getReport, getDashboardData, get, init, ping };
 }
 
 module.exports = es;
