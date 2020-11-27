@@ -242,7 +242,29 @@ function es() {
     async function search(query, callback) {
         await client.search({
             index: index,
-            q: query,
+            body: {
+                query: {
+                    bool: {
+                        must: [
+                            {
+                                match: {
+                                    postcode_district: query.q.replace('postcode_district:', ''),
+                                },
+
+                            },
+                            {
+                                range: {
+                                    transaction_date: {
+                                        gte: query.startDate,
+                                        lte: query.endDate,
+                                        format: "dd-MM-yyyy"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
             size: 100
         }, callback);
 

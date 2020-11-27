@@ -14,7 +14,7 @@ function booksController(lib) {
     }
 
     function get(req, res) {
-        lib.search(req.query.q, async (err, response, status) => {
+        lib.search(req.query, async (err, response, status) => {
             if (err) {
                 return res.send(err);
             }
