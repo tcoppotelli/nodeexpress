@@ -248,7 +248,7 @@ function es() {
                         must: [
                             {
                                 match: {
-                                    postcode_district: query.q.replace('postcode_district:', ''),
+                                    postcode_district: query.q,
                                 },
 
                             },
