@@ -1,3 +1,4 @@
+const _ = require('lodash');
 
 function booksController(lib) {
 
@@ -22,7 +23,7 @@ function booksController(lib) {
             const dashboardData = await lib.getDashboardData(req.query.q);
 
             const result = {
-                properties: response.hits.hits.map(i => i._source),
+                properties: _.uniqBy(response.hits.hits.map(i => i._source), 'unique_id'),
                 ...dashboardData
             }
 
